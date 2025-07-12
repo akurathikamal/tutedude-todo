@@ -1,14 +1,3 @@
-document.querySelectorAll('.todo-checkbox').forEach(function(checkbox, idx) {
-  checkbox.addEventListener('change', function() {
-    var text = document.getElementById('text-' + idx);
-    if (checkbox.checked) {
-      text.classList.add('completed');
-    } else {
-      text.classList.remove('completed');
-    }
-  });
-});
-
 // Add todo validation
 document.getElementById('todo-form').addEventListener('submit', function(e) {
   var input = document.getElementById('todo-input');
@@ -19,9 +8,10 @@ document.getElementById('todo-form').addEventListener('submit', function(e) {
 });
 
 // Edit todo
-document.querySelectorAll('.edit-btn').forEach(function(btn, idx) {
+document.querySelectorAll('.edit-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    var textSpan = document.getElementById('text-' + idx);
+    var todoItem = btn.closest('.todo-item');
+    var textSpan = todoItem.querySelector('.todo-text');
     var currentText = textSpan.textContent;
     var input = document.createElement('input');
     input.type = 'text';
@@ -32,7 +22,7 @@ document.querySelectorAll('.edit-btn').forEach(function(btn, idx) {
 
     input.addEventListener('blur', function() {
       if (input.value.trim()) {
-        fetch('/edit/' + idx, {
+        fetch('/edit/' + todoItem.dataset.id, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: input.value })
@@ -46,11 +36,12 @@ document.querySelectorAll('.edit-btn').forEach(function(btn, idx) {
 });
 
 // Delete todo
-document.querySelectorAll('.delete-btn').forEach(function(btn, idx) {
+document.querySelectorAll('.delete-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
+    var todoItem = btn.closest('.todo-item');
     if (confirm('Delete this todo?')) {
-      fetch('/delete/' + idx, { method: 'DELETE' })
-      .then(() => location.reload());
+      fetch('/delete/' + todoItem.dataset.id, { method: 'DELETE' })
+        .then(() => location.reload());
     }
   });
 });
@@ -63,6 +54,6 @@ document.getElementById('priority-filter').addEventListener('change', function()
       item.style.display = '';
     } else {
       item.style.display = 'none';
-    }
+      }
   });
 });
