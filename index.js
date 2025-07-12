@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -8,39 +7,27 @@ app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect("mongodb://localhost:27017/todoDB", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+let todos = [];
 
-// Define Todo schema and model
-const todoSchema = new mongoose.Schema({
-  text: String,
-  priority: { type: String, default: "medium" },
-});
-const Todo = mongoose.model("Todo", todoSchema);
-
-// Home page - show all todos
-app.get("/", async (req, res) => {
-  const todos = await Todo.find();
+// Home page
+app.get("/", (req, res) => {
   res.render("list", { todos });
 });
 
 // Add todo
-app.post("/", async (req, res) => {
+app.post("/", (req, res) => {
   const { element, priority } = req.body;
   if (element && element.trim()) {
-    await Todo.create({ text: element.trim(), priority: priority || "medium" });
+    todos.push({ text: element.trim(), priority: priority || "medium" });
   }
   res.redirect("/");
 });
 
 // Edit todo
-app.put("/edit/:id", async (req, res) => {
-  const id = req.params.id;
-  if (req.body.text && req.body.text.trim()) {
-    await Todo.findByIdAndUpdate(id, { text: req.body.text.trim() });
+app.put("/edit/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (todos[id] && req.body.text && req.body.text.trim()) {
+    todos[id].text = req.body.text.trim();
     res.sendStatus(200);
   } else {
     res.sendStatus(400);
@@ -48,13 +35,17 @@ app.put("/edit/:id", async (req, res) => {
 });
 
 // Delete todo
-app.delete("/delete/:id", async (req, res) => {
-  const id = req.params.id;
-  await Todo.findByIdAndDelete(id);
-  res.sendStatus(200);
+app.delete("/delete/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (todos[id]) {
+    todos.splice(id, 1);
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(400);
+  }
 });
 
-const PORT =3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
